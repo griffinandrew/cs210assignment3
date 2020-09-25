@@ -373,3 +373,18 @@ int flight_compare_time(const void *a, const void *b)
 }
 
 WRITE SOME CODE!
+//flight schedule allocate
+struct flight_schedule * flight_schedule_allocate(void){
+  *flight_schedules_active = *flight_schedules_free;
+  *flight_schedules_free = *flight_schedules_free.next;
+  return(flight_schedule);
+}
+
+
+
+//flight schedule free
+
+void flight_schedule_free(struct flight_schedule *fs){
+  *flight_schedule_active = *flight_schedule_free;
+  *fs = 
+}
