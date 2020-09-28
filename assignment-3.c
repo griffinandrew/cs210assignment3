@@ -397,7 +397,7 @@ void flight_schedule_free(struct flight_schedule *fs){
   int counter = 0;
   struct flight_schedule *temp = flight_schedules_active;
   while(temp != NULL) {
-    if(temp == fs){
+    if(temp == fs){ //use flight schedule find instead
       break;
     }
     temp = temp->next;
@@ -412,12 +412,12 @@ void flight_schedule_free(struct flight_schedule *fs){
     flight_schedule_reset(temp);
 
     temp->next = flight_schedules_free; //this block of code adds temp to front of free
-    flight_schedule_free = temp;
+    flight_schedules_free = temp;
     flight_schedules_free->next->prev = flight_schedules_free;
     //flight_schedule_reset(temp);
 
   }
-  if (counter != sizeof(fs)/sizeof(fs[0])){ //slightly wrong
+  if (counter != sizeof(fs)/sizeof(fs[0])){ //slightly wrong dont 
     temp->prev->next = temp->next;
     temp->next->prev = temp->prev;
     temp->next = NULL;
@@ -426,7 +426,7 @@ void flight_schedule_free(struct flight_schedule *fs){
     flight_schedule_reset(temp);
 
     temp->next = flight_schedules_free;
-    flight_schedule_free = temp;
+    flight_schedules_free = temp;
     flight_schedules_free->next->prev = flight_schedules_free;
   }
   else{
@@ -436,8 +436,20 @@ void flight_schedule_free(struct flight_schedule *fs){
     flight_schedule_reset(temp); //this sets both next and prev of temp to null
 
     temp->next = flight_schedules_free;
-    flight_schedule_free = temp;
+    flight_schedules_free = temp;
     flight_schedules_free->next->prev = flight_schedules_free;
     
   }
 }
+
+struct flight_schedule *flight_schedule_find(char *city){ //it says city_t city
+  struct flight_schedule *temp = flight_schedules_active;
+  while(temp != NULL){
+    if (strcmp(city,temp->destination) == 0){
+      return(temp);
+    }
+    temp = temp->next;
+  }
+}
+
+
