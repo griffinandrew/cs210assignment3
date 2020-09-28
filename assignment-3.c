@@ -394,5 +394,50 @@ struct flight_schedule * flight_schedule_allocate(void){
 //flight schedule free
 //takes schedule off active list, resets it, then places the node back on free list
 void flight_schedule_free(struct flight_schedule *fs){
-  struct flight_schedule *temp = flight
+  int counter = 0;
+  struct flight_schedule *temp = flight_schedules_active;
+  while(temp != NULL) {
+    if(temp == fs){
+      break;
+    }
+    temp = temp->next;
+    counter++;
+  }
+  
+  if (counter == 0){
+    flight_schedules_active = temp->next;
+    flight_schedules_active->prev = NULL;
+    temp->next = NULL;
+
+    flight_schedule_reset(temp);
+
+    temp->next = flight_schedules_free; //this block of code adds temp to front of free
+    flight_schedule_free = temp;
+    flight_schedules_free->next->prev = flight_schedules_free;
+    //flight_schedule_reset(temp);
+
+  }
+  if (counter != sizeof(fs)/sizeof(fs[0])){ //slightly wrong
+    temp->prev->next = temp->next;
+    temp->next->prev = temp->prev;
+    temp->next = NULL;
+    temp->prev = NULL;
+
+    flight_schedule_reset(temp);
+
+    temp->next = flight_schedules_free;
+    flight_schedule_free = temp;
+    flight_schedules_free->next->prev = flight_schedules_free;
+  }
+  else{
+    temp->prev = NULL;
+    flight_schedules_active->prev->next = NULL;
+
+    flight_schedule_reset(temp); //this sets both next and prev of temp to null
+
+    temp->next = flight_schedules_free;
+    flight_schedule_free = temp;
+    flight_schedules_free->next->prev = flight_schedules_free;
+    
+  }
 }
