@@ -378,21 +378,21 @@ int flight_compare_time(const void *a, const void *b)
 //returns pointer to updated flight schedule
 struct flight_schedule * flight_schedule_allocate(void){
 
-  struct flight_schedule temp = 
-  
-  
-  
-  *flight_schedules_active = *flight_schedules_free->free;
+  struct flight_schedule *temp =  flight_schedules_free;
+  flight_schedules_free = flight_schedules_free->next;
+  flight_schedules_free->prev = NULL;
+  temp->next = flight_schedules_active;
 
+  flight_schedules_active = temp;
+  flight_schedules_active->next->prev = flight_schedules_active;
+  //temp->prev = NULL;
+  //struct flight_schedule *temp2 = flight_schedules_active
   
-  //flight_schedules_active = flight_schedules_free;
-  *flight_schedules_free = *flight_schedules_free->next;
-  *flight_schedules_free->prev = NULL;
-  return(flight_schedules_active->flights[]);
+  return(flight_schedules_active);
 }
 
 //flight schedule free
 //takes schedule off active list, resets it, then places the node back on free list
 void flight_schedule_free(struct flight_schedule *fs){
-  
+  struct flight_schedule *temp = flight
 }
