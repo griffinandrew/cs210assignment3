@@ -442,10 +442,11 @@ void flight_schedule_free(struct flight_schedule *fs){
   }
 }
 
-struct flight_schedule *flight_schedule_find(char *city){ //it says city_t city
+struct flight_schedule *flight_schedule_find(city_t city){ //or char *city//it says city_t city cant use strcmp then ja
   struct flight_schedule *temp = flight_schedules_active;
+
   while(temp != NULL){
-    if (strcmp(city,temp->destination) == 0){
+    if (strcmp(city,temp->destination) == 0){ //may have to use casts?
       return(temp);
     }
     temp = temp->next;
@@ -453,3 +454,58 @@ struct flight_schedule *flight_schedule_find(char *city){ //it says city_t city
 }
 
 
+void flight_schedule_add(city_t city){ //should this call get city
+  struct flight_schedule *p = flight_schedule_allocate(); // returns pointer and assigns to p
+  
+  if (flight_schedule_find) {
+    msg_city_exists(city);
+  }
+  strncpy(p->destination, city, MAX_CITY_NAME_LEN);
+  
+  //p->destination = ch; 
+
+}
+
+
+void flight_schedule_remove(city_t city){
+  struct flight_schedule *temp = flight_schedule_find(city);
+  flight_schedule_free(temp);
+}
+
+
+
+void flight_schedule_listAll(void){
+  struct flight_schedule *temp = flight_schedules_active;
+  while(temp != NULL){
+    printf("%p", &temp);
+    temp = temp->next;
+  }
+
+}
+
+void flight_schedule_list(city_t city){
+  struct flight_schedule *temp = flight_schedules_active;
+  while(temp != NULL){
+    if (strcmp(city,temp->destination) == 0){
+      printf("%p", &temp);
+    }
+    temp = temp->next;
+  }
+}
+
+void flight_schedule_add_flight(city_t city){
+  flight_schedule_add(city);
+  struct flight_schedule *temp = flight_schedule_find(city);
+
+  int time = time_get();
+  int capacity = flight_capacity_get();
+  
+  if (time == 1 || capacity == 1 ){
+      return 1;
+  }
+
+  temp->flight->flights[];
+
+
+
+}
