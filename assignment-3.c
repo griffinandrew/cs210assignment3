@@ -497,8 +497,10 @@ void flight_schedule_add_flight(city_t city){
   flight_schedule_add(city);
   struct flight_schedule *temp = flight_schedule_find(city);
 
-  time_t time = time_get();
-  int capacity = flight_capacity_get();
+
+  int *t;
+  time_get(t); //do this then check if t is 0 to see if valid or not 
+  int capacity = flight_capacity_get();  //this also has to be done as above to get appropraite io
   
   if (time == 1 || capacity == 1 ){
       return 1;
@@ -527,14 +529,19 @@ void flight_schedule_remove_flight(city_t city){
 
 
 
-  time_t time = time_get();
-  int capacity = flight_capacity_get(); 
+  int *t;
+  time_get(t); //if 1 continue; else tell user
+   if(time_get(t) == 0) {
+     return;
+   }
+  int *c;
+  flight_capacity_get(c); 
   
   struct flight *flights;
   flights = temp->flights;
 
   for(int i = 0; i < MAX_FLIGHTS_PER_CITY; i++){
-    if(flights[i].time == time){
+    if(flights[i].time == *t){
       flights[i].time = -1;//was flights[i] will this change correct one?
       flights[i].capacity = 0;  
       flights[i].available = 0;
