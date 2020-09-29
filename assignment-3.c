@@ -545,5 +545,41 @@ void flight_schedule_remove_flight(city_t city){
 
 
 void flight_schedule_schedule_seat(city_t city) {
+  struct flight_schedule *temp = flight_schedule_find(city);
+
+  struct flight *flights;
+  flights = temp->flights;
+
+  int time = time_get();
+  int nearest = 0;
+  int position = 0;
+
+  for(int i = 0; i < MAX_FLIGHTS_PER_CITY; i++){
+    if(flights[i].time >= time){
+      if(flights[i].time - nearest <= nearest - time){
+        nearest = flights[i].time;
+        position = i;
+      }
+    }
+  }
+flights[position].available--;
   
 }
+
+flight_schedule_unschedule_seat(city_t city){
+  struct flight_schedule *temp = flight_schedule_find(city);
+
+  struct flight *flights;
+  flights = temp->flights;
+
+  int time = time_get();
+  int nearest = 0;
+  int position = 0;
+
+  for(int i = 0; i < MAX_FLIGHTS_PER_CITY; i++){
+    if(flights[i].time == time){
+     flights[i].available--;
+    }
+  }
+}
+
