@@ -497,15 +497,53 @@ void flight_schedule_add_flight(city_t city){
   flight_schedule_add(city);
   struct flight_schedule *temp = flight_schedule_find(city);
 
-  int time = time_get();
+  time_t time = time_get();
   int capacity = flight_capacity_get();
   
   if (time == 1 || capacity == 1 ){
       return 1;
   }
 
-  temp->flight->flights[];
+  struct flight *flights;
+  flights = temp->flights;
+  //flights[i]
+  //loop thru flights until open flight then add flight
+
+  for(int i = 0; i < MAX_FLIGHTS_PER_CITY; i++){
+    if(flights[i].time == -1){
+      flights[i].time = time;//was flights[i] will this change correct one?
+      flights[i].capacity = capacity;
+      break;
+    }
+  }
+  //else return that it failed
+
+
+}
+
+void flight_schedule_remove_flight(city_t city){
+  struct flight_schedule *temp = flight_schedule_find(city);
+ //idk if this is the right time to call or even need too
 
 
 
+  time_t time = time_get();
+  int capacity = flight_capacity_get(); 
+  
+  struct flight *flights;
+  flights = temp->flights;
+
+  for(int i = 0; i < MAX_FLIGHTS_PER_CITY; i++){
+    if(flights[i].time == time){
+      flights[i].time = -1;//was flights[i] will this change correct one?
+      flights[i].capacity = 0;  
+      flights[i].available = 0;
+      break;
+    }
+  }
+}
+
+
+void flight_schedule_schedule_seat(city_t city) {
+  
 }
