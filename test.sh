@@ -262,7 +262,7 @@ EOF
     echo "FAIL"
     [[ -n $VERBOSE ]] && echo "Your program produced:"
     [[ -n $VERBOSE ]] && echo "--------------------------"
-    [[ -n $VERBOSE ]] && echo "$answers"    
+    [[ -n $VERBOSE ]] && echo "$answer"    
     [[ -n $VERBOSE ]] && echo "--------------------------"
     [[ -n $VERBOSE ]] && echo "Output should have been:"
     [[ -n $VERBOSE ]] && echo "--------------------------"
