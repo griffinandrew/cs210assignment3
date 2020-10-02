@@ -393,8 +393,11 @@ struct flight_schedule * flight_schedule_allocate(void){
   struct flight_schedule *temp =  flight_schedules_free;
   struct flight_schedule *fs;
   if (flight_schedules_free != NULL){
-    flight_schedules_free = temp->next;
-    flight_schedules_free->prev = NULL;
+    flight_schedules_free = temp->next; //make sure 
+    if(temp->next != NULL) {
+      flight_schedules_free->prev = NULL;
+    }
+    
   }
 
 
@@ -528,13 +531,31 @@ void flight_schedule_listAll(void){
 }
 
 void flight_schedule_list(city_t city){
-  struct flight_schedule *temp = flight_schedules_active; 
+  if(flight_schedule_find(city) == NULL){
+    msg_city_bad(city);
+    return;
+  }
+  struct flight_schedule *fs = flight_schedule_find(city);
+  msg_city_flights(city);
+  for(int j =0; j < MAX_FLIGHTS_PER_CITY; j++){
+    if(fs->flights[j].time != -1){
+      msg_flight_info(fs->flights[j].time, fs->flights[j].available, fs->flights[j].capacity);
+    }
+  }
+  printf("\n");
+
+
+
+
+  /*struct flight_schedule *temp = flight_schedules_active; 
+  msg_city_flights(city);
   while(temp != NULL){
     if (strcmp(city,temp->destination) == 0){
       printf("%s\n", temp->destination); //displaying memory address
     }
     temp = temp->next;
   }
+  */
 }
 
 void flight_schedule_add_flight(city_t city){
@@ -557,16 +578,18 @@ void flight_schedule_add_flight(city_t city){
     msg_city_max_flights_reached(city);
   }
   else{
-    int c = (temp->flights[i].capacity); // look for value of c 
-    
-    flight_capacity_get(&c);
-    printf("ADD_FLIGHT %d", c);
-    flights[i].available = c; 
+
     int t = (flights[i].time);
     
     time_get(&t);
-    printf("ADD FLIGHT 2 %d", t);
-
+    //printf("ADD FLIGHT time %d", t);
+    temp->flights[i].time = t;
+    int c = (temp->flights[i].capacity); // look for value of c 
+    
+    flight_capacity_get(&c);
+    //printf("ADD_FLIGHT cap %d", c);
+    temp->flights[i].available = c; 
+    temp->flights[i].capacity = c;
   }
   /*
   int *t;
@@ -644,7 +667,7 @@ void flight_schedule_schedule_seat(city_t city) {
      return;
    }
 
-  int nearest = 0;
+  int nearest = 0; 
   int position = 0;
 
   for(int i = 0; i < MAX_FLIGHTS_PER_CITY; i++){
