@@ -511,6 +511,9 @@ void flight_schedule_add(city_t city){ //should this call get city
 
 void flight_schedule_remove(city_t city){
   struct flight_schedule *temp = flight_schedule_find(city);
+  if(temp == NULL){
+
+  }
   flight_schedule_free(temp);
 }
 
@@ -536,21 +539,22 @@ void flight_schedule_list(city_t city){
 }
 
 void flight_schedule_add_flight(city_t city){
-  flight_schedule_add(city);
+  //flight_schedule_add(city);
   struct flight_schedule *temp = flight_schedule_find(city);
-
 
   int *t;
   time_get(t); //do this then check if t is 0 to see if valid or not 
   
   if(time_get(t) == 0) { //or just t
-     return;
+    msg_flight_bad_time();      
+    return;
    }
 
   int *c;
   flight_capacity_get(c);  //this also has to be done as above to get appropraite io
   
-  if (flight_capacity_get(c) == 0){
+  if (flight_capacity_get(c) == 0){ //show message plane is full
+      msg_flight_no_seats();
       return;
   }
 
@@ -583,7 +587,7 @@ void flight_schedule_remove_flight(city_t city){
   int *c;
   flight_capacity_get(c); 
   if(flight_capacity_get(c) == 0){
-
+      return;
   }
   
   struct flight *flights;
