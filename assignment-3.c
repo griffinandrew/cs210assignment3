@@ -390,10 +390,27 @@ int flight_compare_time(const void *a, const void *b)
 //returns pointer to updated flight schedule
 struct flight_schedule * flight_schedule_allocate(void){
 
-  struct flight_schedule *temp;// =  flight_schedules_free;
+  struct flight_schedule *temp =  flight_schedules_free;
+  struct flight_schedule *fs;
+  if (flight_schedules_free != NULL){
+    flight_schedules_free = temp->next;
+    flight_schedules_free->prev = NULL;
+  }
 
 
-  flight_schedules_free = flight_schedules_free->next;
+  temp->next = flight_schedules_active;
+  //if active not null set active prev to temp
+  if(flight_schedules_active != NULL){
+    flight_schedules_active->prev = temp;
+  }
+   flight_schedules_active = temp;
+
+
+
+
+
+
+  /*
   flight_schedules_free-> prev->next = flight_schedules_active;
   
   //temp->next = flight_schedules_active;
@@ -409,6 +426,7 @@ struct flight_schedule * flight_schedule_allocate(void){
 
   //flight_schedules_active = temp;
   temp = flight_schedules_active;
+  */
   return(temp); //return temp?
 }
 
@@ -465,23 +483,29 @@ struct flight_schedule *flight_schedule_find(city_t city){ //or char *city//it s
 
   while(temp != NULL){
     if (strcmp(city,temp->destination) == 0){ //may have to use casts?
-      return(temp);
+      break; //return(temp);
     }
     temp = temp->next;
   }
+  return (temp);
 }
 
 
 void flight_schedule_add(city_t city){ //should this call get city
+
+  //first cheeck to see if city exists
+  struct flight_schedule *fs = flight_schedule_find(city);
+  if (fs != NULL)  {
+    msg_city_exists(city);
+  }
+
+  if (fs == NULL){
   struct flight_schedule *p = flight_schedule_allocate(); // returns pointer and assigns to p
-  
-  //if (flight_schedule_find == city)  {
-  //  msg_city_exists(city);
- // } //
   strncpy(p->destination, city, MAX_CITY_NAME_LEN);
   
   //p->destination = ch; 
 
+  }
 }
 
 
@@ -493,19 +517,19 @@ void flight_schedule_remove(city_t city){
 
 
 void flight_schedule_listAll(void){
-  struct flight_schedule *temp = flight_schedules_active;
+  struct flight_schedule *temp = flight_schedules_active; //need to add messages
   while(temp != NULL){
-    printf("%p", temp); // print temp is disaplying memory address
+    printf("%s\n", temp->destination); // print temp is disaplying memory address
     temp = temp->next;
   }
 
 }
 
 void flight_schedule_list(city_t city){
-  struct flight_schedule *temp = flight_schedules_active;
+  struct flight_schedule *temp = flight_schedules_active; 
   while(temp != NULL){
     if (strcmp(city,temp->destination) == 0){
-      printf("%p", *temp); //displaying memory address
+      printf("%s\n", temp->destination); //displaying memory address
     }
     temp = temp->next;
   }
