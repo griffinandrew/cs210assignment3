@@ -405,11 +405,6 @@ struct flight_schedule * flight_schedule_allocate(void){
   }
    flight_schedules_active = temp;
 
-
-
-
-
-
   /*
   flight_schedules_free-> prev->next = flight_schedules_active;
   
@@ -487,13 +482,17 @@ struct flight_schedule *flight_schedule_find(city_t city){ //or char *city//it s
     }
     temp = temp->next;
   }
-  return (temp);
+  return (temp); //this might return null 
 }
 
 
 void flight_schedule_add(city_t city){ //should this call get city
 
   //first cheeck to see if city exists
+  if (flight_schedules_free ==NULL){
+    msg_schedule_no_free();
+  }
+
   struct flight_schedule *fs = flight_schedule_find(city);
   if (fs != NULL)  {
     msg_city_exists(city);
@@ -547,14 +546,14 @@ void flight_schedule_add_flight(city_t city){
   
   if(time_get(t) == 0) { //or just t
     msg_flight_bad_time();      
-    return;
+    return; //maybe use go to end
    }
 
-  int *c;
-  flight_capacity_get(c);  //this also has to be done as above to get appropraite io
+  int c = 15;
+  flight_capacity_get(&c);  //this also has to be done as above to get appropraite io
   
-  if (flight_capacity_get(c) == 0){ //show message plane is full
-      msg_flight_no_seats();
+  if (flight_capacity_get(&c) == 0){ //show message plane is full
+      //msg_flight_no_seats();
       return;
   }
 
@@ -566,14 +565,14 @@ void flight_schedule_add_flight(city_t city){
   for(int i = 0; i < MAX_FLIGHTS_PER_CITY; i++){
     if(flights[i].time == -1){
       flights[i].time = *t;//was flights[i] will this change correct one?
-      flights[i].capacity = *c;
+      flights[i].capacity = c;
       break;
     }
   }
   //else return that it failed
-
-
 }
+
+
 
 void flight_schedule_remove_flight(city_t city){
   struct flight_schedule *temp = flight_schedule_find(city);
@@ -584,9 +583,9 @@ void flight_schedule_remove_flight(city_t city){
    if(time_get(t) == 0) {
      return;
    }
-  int *c;
-  flight_capacity_get(c); 
-  if(flight_capacity_get(c) == 0){
+  int c =15;
+  flight_capacity_get(&c); 
+  if(flight_capacity_get(&c) == 0){
       return;
   }
   
@@ -612,6 +611,7 @@ void flight_schedule_schedule_seat(city_t city) {
   int *t;
   time_get(t);
   if(time_get(t) == 0) {
+     msg_flight_bad_time();
      return;
    }
 
