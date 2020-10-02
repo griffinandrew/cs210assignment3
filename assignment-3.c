@@ -11,8 +11,8 @@
 
 // Limit constants
 #define MAX_CITY_NAME_LEN 20
-#define MAX_FLIGHTS_PER_CITY 5
-#define MAX_DEFAULT_SCHEDULES 50
+#define MAX_FLIGHTS_PER_CITY 3
+#define MAX_DEFAULT_SCHEDULES 2
 
 // Time definitions
 #define TIME_MIN 0
@@ -403,7 +403,7 @@ struct flight_schedule * flight_schedule_allocate(void){
   if(flight_schedules_active != NULL){
     flight_schedules_active->prev = temp;
   }
-   flight_schedules_active = temp;
+  flight_schedules_active = temp;
 
   /*
   flight_schedules_free-> prev->next = flight_schedules_active;
@@ -422,7 +422,7 @@ struct flight_schedule * flight_schedule_allocate(void){
   //flight_schedules_active = temp;
   temp = flight_schedules_active;
   */
-  return(temp); //return temp?
+  return(temp); //return temp temp could be null resulting in error
 }
 
 //flight schedule free
@@ -478,18 +478,18 @@ struct flight_schedule *flight_schedule_find(city_t city){ //or char *city//it s
 
   while(temp != NULL){
     if (strcmp(city,temp->destination) == 0){ //may have to use casts?
-      break; //return(temp);
+      return(temp);
     }
     temp = temp->next;
   }
-  return (temp); //this might return null 
+ //this might return null 
 }
 
 
 void flight_schedule_add(city_t city){ //should this call get city
 
   //first cheeck to see if city exists
-  if (flight_schedules_free ==NULL){
+  if (flight_schedules_free == NULL){
     msg_schedule_no_free();
   }
 
@@ -510,9 +510,9 @@ void flight_schedule_add(city_t city){ //should this call get city
 
 void flight_schedule_remove(city_t city){
   struct flight_schedule *temp = flight_schedule_find(city);
-  if(temp == NULL){
-
-  }
+  //if(temp == NULL){
+   
+  //}
   flight_schedule_free(temp);
 }
 
@@ -540,7 +540,35 @@ void flight_schedule_list(city_t city){
 void flight_schedule_add_flight(city_t city){
   //flight_schedule_add(city);
   struct flight_schedule *temp = flight_schedule_find(city);
+  struct flight *flights;
+  flights = temp->flights;
+  int full = 0;
+  int i =0;
 
+  while(temp->flights[i].time != -1){
+    
+    if (i == MAX_FLIGHTS_PER_CITY){
+      full = 1;
+      break;
+    }
+    i++;
+  }
+  if(full){
+    msg_city_max_flights_reached(city);
+  }
+  else{
+    int c = (temp->flights[i].capacity); // look for value of c 
+    
+    flight_capacity_get(&c);
+    printf("ADD_FLIGHT %d", c);
+    flights[i].available = c; 
+    int t = (flights[i].time);
+    
+    time_get(&t);
+    printf("ADD FLIGHT 2 %d", t);
+
+  }
+  /*
   int *t;
   time_get(t); //do this then check if t is 0 to see if valid or not 
   
@@ -557,8 +585,8 @@ void flight_schedule_add_flight(city_t city){
       return;
   }
 
-  struct flight *flights;
-  flights = temp->flights;
+  //struct flight *flights;
+  //flights = temp->flights;
   //flights[i]
   //loop thru flights until open flight then add flight
 
@@ -570,6 +598,7 @@ void flight_schedule_add_flight(city_t city){
     }
   }
   //else return that it failed
+  */
 }
 
 
@@ -594,7 +623,7 @@ void flight_schedule_remove_flight(city_t city){
 
   for(int i = 0; i < MAX_FLIGHTS_PER_CITY; i++){
     if(flights[i].time == *t){
-      flights[i].time = -1;//was flights[i] will this change correct one?
+      flights[i].time = -1;//was flights[i] will this change correct one? or TIME_NULL
       flights[i].capacity = 0;  
       flights[i].available = 0;
       break;
