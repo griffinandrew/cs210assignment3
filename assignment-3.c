@@ -439,11 +439,11 @@ if (fs->next != NULL && fs == flight_schedules_active) { // firtst node with oth
   flight_schedules_active->prev = NULL;
 }
 if (fs == flight_schedules_active){   //only one node
-  flight_schedules_active == NULL;
+  flight_schedules_active = NULL;
 
 }
 if (fs->next == NULL){ // last
-  fs->prev->next == NULL;
+  fs->prev->next = NULL;
 }
 else{
   fs->prev->next = fs->next;
@@ -510,14 +510,21 @@ else{
 
 struct flight_schedule *flight_schedule_find(city_t city){ //or char *city//it says city_t city cant use strcmp then ja
   struct flight_schedule *temp = flight_schedules_active;
+  int found = 0;
 
   while(temp != NULL){
     if (strcmp(city,temp->destination) == 0){ //may have to use casts?
+      found =1;
+      //continue;
       return(temp);
+    }
+    else {
+      found = 0;
     }
     temp = temp->next;
   }
  //this might return null 
+ //return(temp);
 }
 
 
@@ -552,7 +559,7 @@ void flight_schedule_remove(city_t city){
     //printf("removed");
     flight_schedule_free(flight_schedule_find(city));
   }
-  printf("removed");
+  //printf("removed");
 }
 
 
@@ -669,7 +676,7 @@ void flight_schedule_remove_flight(city_t city){
   int *t;
   time_get(t); //if 1 continue; else tell user
   int found = 0;
-  if (temp = NULL){
+  if (temp == NULL){
     msg_city_bad(city);
   }
   else{
@@ -696,18 +703,40 @@ void flight_schedule_remove_flight(city_t city){
 void flight_schedule_schedule_seat(city_t city) {
   struct flight_schedule *temp = flight_schedule_find(city);
 
-  struct flight *flights;
-  flights = temp->flights;
+  struct flight *fl;
+  fl = temp->flights;
   int *t;
   time_get(t);
-  if(time_get(t) == 0) {
-     msg_flight_bad_time();
-     return;
+  if(temp == NULL) {
+     msg_city_bad(city);
+   }
+   else {
+    //int nearest = 0; 
+    //int position = 0;
+    int i =0;
+    flight_schedule_sort_flights_by_time(temp);
+
+    while(fl[i].time != -1 && i != MAX_FLIGHTS_PER_CITY-1 ){
+      if(fl[i].time < *t && fl[i+1].time == -1){
+        msg_flight_bad_time();
+        break;
+      }
+      else if (fl[i].time >= *t && fl[i].available != 0){
+        fl[i].available--;
+        break;
+      }
+      else if (fl[i].time >= *t && fl[i].available == 0){
+        msg_flight_no_seats();
+        break;
+      }
+      i++;
+    }
    }
 
-  int nearest = 0; 
-  int position = 0;
+  
 
+
+/*
   for(int i = 0; i < MAX_FLIGHTS_PER_CITY; i++){
     if(flights[i].time >= *t){
       if(flights[i].time - nearest <= nearest - *t) {  //had time instead of t
@@ -717,7 +746,7 @@ void flight_schedule_schedule_seat(city_t city) {
     }
   }
 flights[position].available--;
-  
+  */
 }
 
  void flight_schedule_unschedule_seat(city_t city){
@@ -736,6 +765,7 @@ flights[position].available--;
   for(int i = 0; i < MAX_FLIGHTS_PER_CITY; i++){
     if(flights[i].time == *t){ //origrinally was time 
      flights[i].available--;
+     break;
     }
   }
 }
