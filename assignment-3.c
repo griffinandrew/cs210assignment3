@@ -512,11 +512,14 @@ void flight_schedule_add(city_t city){ //should this call get city
 
 
 void flight_schedule_remove(city_t city){
-  struct flight_schedule *temp = flight_schedule_find(city);
-  //if(temp == NULL){
-   
-  //}
-  flight_schedule_free(temp);
+  //struct flight_schedule *temp = flight_schedule_find(city);
+  if(flight_schedule_find(city) == NULL){
+   msg_city_bad(city);
+  }
+  else{
+    flight_schedule_free(flight_schedule_find(city));
+  }
+  
 }
 
 
