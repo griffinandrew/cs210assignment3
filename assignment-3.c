@@ -390,8 +390,26 @@ int flight_compare_time(const void *a, const void *b)
 //returns pointer to updated flight schedule
 struct flight_schedule * flight_schedule_allocate(void){
 
+struct flight_schedule *fs = flight_schedules_free;
+
+flight_schedules_free = flight_schedules_free->next;
+
+flight_schedules_free->prev = NULL;
+
+fs->next = flight_schedules_active;
+
+
+if(flight_schedules_active != NULL){
+  flight_schedules_active->prev = fs;
+  
+}
+flight_schedules_active= fs;
+
+return (flight_schedules_free == NULL ? NULL : flight_schedules_active);
+}
+/*
   struct flight_schedule *temp =  flight_schedules_free;
-  struct flight_schedule *fs;
+
   if (flight_schedules_free != NULL){
     flight_schedules_free = temp->next; //make sure 
     if(temp->next != NULL) {
@@ -425,8 +443,8 @@ struct flight_schedule * flight_schedule_allocate(void){
   //flight_schedules_active = temp;
   temp = flight_schedules_active;
   */
-  return(temp); //return temp temp could be null resulting in error
-}
+  //return(temp); //return temp temp could be null resulting in error
+//}
 
 //flight schedule free
 //takes schedule off active list, resets it, then places the node back on free list
@@ -434,32 +452,31 @@ void flight_schedule_free(struct flight_schedule *fs){
 
 
 
-if (fs->next != NULL && fs == flight_schedules_active) { // firtst node with others
-  flight_schedules_active = fs->next;
-  flight_schedules_active->prev = NULL;
-}
-if (fs == flight_schedules_active){   //only one node
-  flight_schedules_active = NULL;
+  if (fs->next != NULL && fs == flight_schedules_active) { // firtst node with others
+    flight_schedules_active = fs->next;
+    flight_schedules_active->prev = NULL;
+  }
+  else if (fs == flight_schedules_active){   //only one node
+    flight_schedules_active = NULL;
+  }
+  else if (fs->next == NULL){ // last
+    fs->prev->next = NULL;
+  }
+  else{
+    fs->prev->next = fs->next;
+    fs->next->prev = fs->prev;
+  }
+  flight_schedule_reset(fs);
 
-}
-if (fs->next == NULL){ // last
-  fs->prev->next = NULL;
-}
-else{
-  fs->prev->next = fs->next;
-  fs->next->prev = fs->prev;
-}
-flight_schedule_reset(fs);
-
-if (flight_schedules_free == NULL){
-  flight_schedules_free = fs;
-}
-else{
-  flight_schedules_free->prev = fs;
-  fs->next = flight_schedules_free;
-  flight_schedules_free = fs;
-  fs->prev = NULL;
-}
+  if (flight_schedules_free == NULL){
+    flight_schedules_free = fs;
+  }
+  else{
+    flight_schedules_free->prev = fs;
+    fs->next = flight_schedules_free;
+    flight_schedules_free = fs;
+    fs->prev = NULL;
+  }
 
 
 /*
@@ -511,6 +528,10 @@ else{
 struct flight_schedule *flight_schedule_find(city_t city){ //or char *city//it says city_t city cant use strcmp then ja
   struct flight_schedule *temp = flight_schedules_active;
   int found = 0;
+
+//  if (temp == NULL) {
+ //   msg_city_bad(city);
+ // }
 
   while(temp != NULL){
     if (strcmp(city,temp->destination) == 0){ //may have to use casts?
@@ -608,6 +629,11 @@ void flight_schedule_add_flight(city_t city){
   flights = temp->flights;
   int full = 0;
   int i =0;
+
+  if (temp == NULL){
+    msg_city_bad(city);
+   // return; // check return 
+  }
 
   while(temp->flights[i].time != -1){
     
@@ -708,12 +734,14 @@ void flight_schedule_schedule_seat(city_t city) {
   int *t;
   time_get(t);
   if(temp == NULL) {
+    printf("null");
      msg_city_bad(city);
    }
    else {
     //int nearest = 0; 
     //int position = 0;
     int i =0;
+    printf("here");
     flight_schedule_sort_flights_by_time(temp);
 
     while(fl[i].time != -1 && i != MAX_FLIGHTS_PER_CITY-1 ){
@@ -723,6 +751,7 @@ void flight_schedule_schedule_seat(city_t city) {
       }
       else if (fl[i].time >= *t && fl[i].available != 0){
         fl[i].available--;
+        printf("ava");
         break;
       }
       else if (fl[i].time >= *t && fl[i].available == 0){
@@ -732,9 +761,6 @@ void flight_schedule_schedule_seat(city_t city) {
       i++;
     }
    }
-
-  
-
 
 /*
   for(int i = 0; i < MAX_FLIGHTS_PER_CITY; i++){
@@ -756,17 +782,16 @@ flights[position].available--;
   flights = temp->flights;
   int *t;
   time_get(t);
-  if(time_get(t) == 0) {
-     return;
-   }
+
   int nearest = 0;
   int position = 0;
 
   for(int i = 0; i < MAX_FLIGHTS_PER_CITY; i++){
     if(flights[i].time == *t){ //origrinally was time 
-     flights[i].available--;
+     flights[i].available++;
      break;
     }
   }
 }
+
 
