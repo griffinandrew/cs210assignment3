@@ -11,8 +11,8 @@
 
 // Limit constants
 #define MAX_CITY_NAME_LEN 20
-#define MAX_FLIGHTS_PER_CITY 3
-#define MAX_DEFAULT_SCHEDULES 2
+#define MAX_FLIGHTS_PER_CITY 5 //3
+#define MAX_DEFAULT_SCHEDULES 50 //2
 
 // Time definitions
 #define TIME_MIN 0
@@ -431,12 +431,44 @@ struct flight_schedule * flight_schedule_allocate(void){
 //flight schedule free
 //takes schedule off active list, resets it, then places the node back on free list
 void flight_schedule_free(struct flight_schedule *fs){
+
+
+
+if (fs->next != NULL && fs == flight_schedules_active) { // firtst node with others
+  flight_schedules_active = fs->next;
+  flight_schedules_active->prev = NULL;
+}
+if (fs == flight_schedules_active){   //only one node
+  flight_schedules_active == NULL;
+
+}
+if (fs->next == NULL){ // last
+  fs->prev->next == NULL;
+}
+else{
+  fs->prev->next = fs->next;
+  fs->next->prev = fs->prev;
+}
+flight_schedule_reset(fs);
+
+if (flight_schedules_free == NULL){
+  flight_schedules_free = fs;
+}
+else{
+  flight_schedules_free->prev = fs;
+  fs->next = flight_schedules_free;
+  flight_schedules_free = fs;
+  fs->prev = NULL;
+}
+
+
+/*
   flight_schedules_active = flight_schedules_active->next;
   flight_schedule_reset(fs);
   fs->next = flight_schedules_free;
   flight_schedules_free = fs;
   fs->next->prev = fs;
-
+*/
 
   /*int counter = 0;
   struct flight_schedule *temp = flight_schedules_active;
@@ -517,9 +549,10 @@ void flight_schedule_remove(city_t city){
    msg_city_bad(city);
   }
   else{
+    //printf("removed");
     flight_schedule_free(flight_schedule_find(city));
   }
-  
+  printf("removed");
 }
 
 
@@ -635,26 +668,28 @@ void flight_schedule_remove_flight(city_t city){
 
   int *t;
   time_get(t); //if 1 continue; else tell user
-   if(time_get(t) == 0) {
-     return;
-   }
-  int c =15;
-  flight_capacity_get(&c); 
-  if(flight_capacity_get(&c) == 0){
-      return;
+  int found = 0;
+  if (temp = NULL){
+    msg_city_bad(city);
   }
-  
-  struct flight *flights;
-  flights = temp->flights;
+  else{
+  struct flight *fl;
+  fl = temp->flights;
 
   for(int i = 0; i < MAX_FLIGHTS_PER_CITY; i++){
-    if(flights[i].time == *t){
-      flights[i].time = -1;//was flights[i] will this change correct one? or TIME_NULL
-      flights[i].capacity = 0;  
-      flights[i].available = 0;
+    if(fl[i].time == *t){
+      fl[i].time = -1;//was flights[i] will this change correct one? or TIME_NULL
+      fl[i].capacity = 0;  
+      fl[i].available = 0;
+      found = 1;
       break;
     }
   }
+  if (found == 0){
+    msg_flight_bad_time();
+  }
+  }
+
 }
 
 
