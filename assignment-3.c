@@ -732,10 +732,10 @@ void flight_schedule_schedule_seat(city_t city) {
   struct flight *fl;
   fl = temp->flights;
   int *t;
-  time_get(t);
+  time_get(t); // was int *t
   if(temp == NULL) {
     printf("null");
-     msg_city_bad(city);
+    msg_city_bad(city);
    }
    else {
     //int nearest = 0; 
@@ -743,7 +743,7 @@ void flight_schedule_schedule_seat(city_t city) {
     int i =0;
     printf("here");
     flight_schedule_sort_flights_by_time(temp);
-
+    printf("sorted");
     while(fl[i].time != -1 && i != MAX_FLIGHTS_PER_CITY-1 ){
       if(fl[i].time < *t && fl[i+1].time == -1){
         msg_flight_bad_time();
