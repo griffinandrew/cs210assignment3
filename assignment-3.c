@@ -745,16 +745,19 @@ void flight_schedule_schedule_seat(city_t city) {
     flight_schedule_sort_flights_by_time(temp);
     printf("sorted");
     while(fl[i].time != -1 && i != MAX_FLIGHTS_PER_CITY-1 ){
+      flight_schedule_list(city);
       if(fl[i].time < *t && fl[i+1].time == -1){
         msg_flight_bad_time();
         break;
       }
-      else if (fl[i].time >= *t && fl[i].available != 0){
+      flight_schedule_list(city);
+      if (fl[i].time >= *t && fl[i].available != 0){ //this and under where else if
         fl[i].available--;
         printf("ava");
         break;
       }
-      else if (fl[i].time >= *t && fl[i].available == 0){
+      flight_schedule_list(city);
+      if (fl[i].time >= *t && fl[i].available == 0){
         msg_flight_no_seats();
         break;
       }
