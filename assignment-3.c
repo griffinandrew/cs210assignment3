@@ -635,14 +635,20 @@ void flight_schedule_add_flight(city_t city){
    // return; // check return 
   }
 
-  while(temp->flights[i].time != -1){
+  while(temp->flights[i].time != -1){ //seg fault here
     
-    if (i == MAX_FLIGHTS_PER_CITY){
+    //if (i == MAX_FLIGHTS_PER_CITY){
+    //  full = 1;
+    //  break;
+    //}
+    i++;
+      if (i == MAX_FLIGHTS_PER_CITY){  //seg fault is becasue it willl try to index into flights i that is outside range
       full = 1;
       break;
     }
-    i++;
+
   }
+
   if(full){
     msg_city_max_flights_reached(city);
   }
@@ -699,8 +705,8 @@ void flight_schedule_remove_flight(city_t city){
   struct flight_schedule *temp = flight_schedule_find(city);
  //idk if this is the right time to call or even need too
 
-  int *t;
-  time_get(t); //if 1 continue; else tell user
+  time_t t;
+  time_get(&t); //if 1 continue; else tell user
   int found = 0;
   if (temp == NULL){
     msg_city_bad(city);
@@ -710,7 +716,7 @@ void flight_schedule_remove_flight(city_t city){
   fl = temp->flights;
 
   for(int i = 0; i < MAX_FLIGHTS_PER_CITY; i++){
-    if(fl[i].time == *t){
+    if(fl[i].time == t){
       fl[i].time = -1;//was flights[i] will this change correct one? or TIME_NULL
       fl[i].capacity = 0;  
       fl[i].available = 0;
@@ -731,8 +737,8 @@ void flight_schedule_schedule_seat(city_t city) {
 
   struct flight *fl;
   fl = temp->flights;
-  int *t;
-  time_get(t); // was int *t
+  time_t t;
+  time_get(&t); // was int *t
   if(temp == NULL) {
     printf("null");
     msg_city_bad(city);
@@ -746,18 +752,18 @@ void flight_schedule_schedule_seat(city_t city) {
     printf("sorted");
     while(fl[i].time != -1 && i != MAX_FLIGHTS_PER_CITY-1 ){
       flight_schedule_list(city);
-      if(fl[i].time < *t && fl[i+1].time == -1){
+      if(fl[i].time < t && fl[i+1].time == -1){
         msg_flight_bad_time();
         break;
       }
       flight_schedule_list(city);
-      if (fl[i].time >= *t && fl[i].available != 0){ //this and under where else if
+      if (fl[i].time >= t && fl[i].available != 0){ //this and under where else if
         fl[i].available--;
         printf("ava");
         break;
       }
       flight_schedule_list(city);
-      if (fl[i].time >= *t && fl[i].available == 0){
+      if (fl[i].time >= t && fl[i].available == 0){
         msg_flight_no_seats();
         break;
       }
@@ -783,14 +789,14 @@ flights[position].available--;
 
   struct flight *flights;
   flights = temp->flights;
-  int *t;
-  time_get(t);
+  time_t t;
+  time_get(&t);
 
   int nearest = 0;
   int position = 0;
 
   for(int i = 0; i < MAX_FLIGHTS_PER_CITY; i++){
-    if(flights[i].time == *t){ //origrinally was time 
+    if(flights[i].time == q){ //origrinally was time 
      flights[i].available++;
      break;
     }
