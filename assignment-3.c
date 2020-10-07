@@ -654,10 +654,10 @@ void flight_schedule_add_flight(city_t city){
   }
   else{
 
-    int t = (flights[i].time);
+    int t = (flights[i].time); //this might cause fault /./ it said here t =-1
     
     time_get(&t);
-    //printf("ADD FLIGHT time %d", t);
+    //printf("ADD FLIGHT time %d", t); 
     temp->flights[i].time = t;
     int c = (temp->flights[i].capacity); // look for value of c 
     
@@ -735,39 +735,45 @@ void flight_schedule_remove_flight(city_t city){
 void flight_schedule_schedule_seat(city_t city) {
   struct flight_schedule *temp = flight_schedule_find(city);
 
-  struct flight *fl;
-  fl = temp->flights;
-  time_t t;
-  time_get(&t); // was int *t
+
+  
+
   if(temp == NULL) {
     printf("null");
     msg_city_bad(city);
    }
+  struct flight *fl;
+  fl = temp->flights;
+  time_t t;
+  //time_get(&t); // was int *t if time gets return false end program then print message about error
+  if (time_get(&t) ==0){
+    return;
+  }
    else {
     //int nearest = 0; 
     //int position = 0;
     int i =0;
-    printf("here");
+    //printf("here");
     flight_schedule_sort_flights_by_time(temp);
-    printf("sorted");
-    while(fl[i].time != -1 && i != MAX_FLIGHTS_PER_CITY-1 ){
-      flight_schedule_list(city);
-      if(fl[i].time < t && fl[i+1].time == -1){
-        msg_flight_bad_time();
-        break;
-      }
-      flight_schedule_list(city);
+    //printf("sorted");
+    for(int i = 0; i < MAX_FLIGHTS_PER_CITY; i++){//while(fl[i].time != -1 && i != MAX_FLIGHTS_PER_CITY-1 ){ //this statement something must be wrong not entering loop
+      //flight_schedule_list(city);
+      //if(fl[i].time < t && fl[i+1].time == -1){
+      //  msg_flight_bad_time();
+      //  break;
+      //}
+      //flight_schedule_list(city);
       if (fl[i].time >= t && fl[i].available != 0){ //this and under where else if
         fl[i].available--;
-        printf("ava");
+        //printf("ava");
         break;
       }
-      flight_schedule_list(city);
+      //flight_schedule_list(city);
       if (fl[i].time >= t && fl[i].available == 0){
         msg_flight_no_seats();
         break;
       }
-      i++;
+      //i++;
     }
    }
 
@@ -790,17 +796,25 @@ flights[position].available--;
   struct flight *flights;
   flights = temp->flights;
   time_t t;
-  time_get(&t);
+  if (time_get(&t) ==0){
+    return;
+  }
 
   int nearest = 0;
   int position = 0;
 
   for(int i = 0; i < MAX_FLIGHTS_PER_CITY; i++){
-    if(flights[i].time == q){ //origrinally was time 
+    if(flights[i].time == t && (flights[i].available < flights[i].capacity)){ //origrinally was time 
      flights[i].available++;
      break;
     }
+    if(flights[i].time == t && (flights[i].available == flights[i].capacity)){
+      msg_flight_all_seats_empty();
+      break;
+    }
+
   }
+  //msg_flight_bad_time();
 }
 
 
