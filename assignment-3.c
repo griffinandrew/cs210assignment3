@@ -392,9 +392,11 @@ struct flight_schedule * flight_schedule_allocate(void){
 
 struct flight_schedule *fs = flight_schedules_free;
 
-flight_schedules_free = flight_schedules_free->next;
-
-flight_schedules_free->prev = NULL; //seg fault here for adding plus 1 max prev must already be null and this assignment is messing it up , idk why chaing def_sched affects test 4 tho
+flight_schedules_free = fs->next;
+if(flight_schedules_free != NULL){
+  flight_schedules_free->prev = NULL; //seg fault here for adding plus 1 max prev must already be null and this assignment is messing it up , idk why chaing def_sched affects test 4 tho
+}
+//flight_schedules_free->prev = NULL; //seg fault here for adding plus 1 max prev must already be null and this assignment is messing it up , idk why chaing def_sched affects test 4 tho
 
 fs->next = flight_schedules_active;
 
@@ -404,7 +406,7 @@ if(flight_schedules_active != NULL){
 }
 flight_schedules_active= fs;
 
-return (flight_schedules_free == NULL ? NULL : flight_schedules_active);
+return (fs);
 }
 /*
   struct flight_schedule *temp =  flight_schedules_free;
@@ -497,32 +499,35 @@ struct flight_schedule *flight_schedule_find(city_t city){ //or char *city//it s
  //return; //this might be wrong 
 }
 
-
+//takes an input city and adds a flight schedule for given city
 void flight_schedule_add(city_t city){ //should this call get city
   
   //first cheeck to see if city exists
   //if(flight_schedules_active == MAX_DEFAULT_SCHEDULES+1){ //not this error coulod be in free
    // msg_schedule_no_free();
  // }
+  //do i have to loop thru and heck 
   if (flight_schedules_free == NULL){ //maybe something is wrong in free 
     msg_schedule_no_free();
+    return;
   }
 
   struct flight_schedule *fs = flight_schedule_find(city);
   if (fs != NULL)  {
     msg_city_exists(city);
+    return;
   }
 
   if (fs == NULL){
-  struct flight_schedule *p = flight_schedule_allocate(); // returns pointer and assigns to p
-  strncpy(p->destination, city, MAX_CITY_NAME_LEN);
+    struct flight_schedule *p = flight_schedule_allocate(); // returns pointer and assigns to p
+    strncpy(p->destination, city, MAX_CITY_NAME_LEN);
   
   //p->destination = ch; 
 
   }
 }
 
-
+//takes as input a city and removes the flight schedule for that city if it exists
 void flight_schedule_remove(city_t city){
   //struct flight_schedule *temp = flight_schedule_find(city);
   if(flight_schedule_find(city) == NULL){
@@ -536,7 +541,7 @@ void flight_schedule_remove(city_t city){
 }
 
 
-
+//lists all existing flight schedules 
 void flight_schedule_listAll(void){
   struct flight_schedule *temp = flight_schedules_active; //need to add messages
   while(temp != NULL){
@@ -545,7 +550,7 @@ void flight_schedule_listAll(void){
   }
 
 }
-
+//lists all of the flights for a given city
 void flight_schedule_list(city_t city){
   if(flight_schedule_find(city) == NULL){
     msg_city_bad(city);
@@ -563,6 +568,8 @@ void flight_schedule_list(city_t city){
 
 }
 
+//takes as input city and adds a given flight to that city uses get time and 
+//i dont call time get or flight cap get is that a prob?
 void flight_schedule_add_flight(city_t city){
   //flight_schedule_add(city);
   struct flight_schedule *temp = flight_schedule_find(city);
@@ -599,7 +606,7 @@ void flight_schedule_add_flight(city_t city){
 }
 
 
-
+//takes as input a city and removes given fliht for that city, 
 void flight_schedule_remove_flight(city_t city){
   struct flight_schedule *temp = flight_schedule_find(city);
  //idk if this is the right time to call or even need too
@@ -630,7 +637,8 @@ void flight_schedule_remove_flight(city_t city){
 
 }
 
-
+//takes as input city and schedules seat on a flight for tahat city
+//the user can specify a time and your program should schedule the next avaiable flight from given time
 void flight_schedule_schedule_seat(city_t city) {
   struct flight_schedule *temp = flight_schedule_find(city);
   if(temp == NULL) {
@@ -674,6 +682,10 @@ void flight_schedule_schedule_seat(city_t city) {
     msg_flight_no_seats();
    }
 }
+
+
+//Takes as input a city and unschedules a seat on a given flight for this city.
+//The user must specify the exact time for the flight that they are unscheduling.
 
  void flight_schedule_unschedule_seat(city_t city){
   struct flight_schedule *temp = flight_schedule_find(city);
