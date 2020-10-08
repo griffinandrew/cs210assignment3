@@ -11,8 +11,8 @@
 
 // Limit constants
 #define MAX_CITY_NAME_LEN 20
-#define MAX_FLIGHTS_PER_CITY 5 //3
-#define MAX_DEFAULT_SCHEDULES 50 //2
+#define MAX_FLIGHTS_PER_CITY 5 // should be 5
+#define MAX_DEFAULT_SCHEDULES 50  // should be 50 if this is 2 test4 fails idk why
 
 // Time definitions
 #define TIME_MIN 0
@@ -394,14 +394,13 @@ struct flight_schedule *fs = flight_schedules_free;
 
 flight_schedules_free = flight_schedules_free->next;
 
-flight_schedules_free->prev = NULL;
+flight_schedules_free->prev = NULL; //seg fault here for adding plus 1 max prev must already be null and this assignment is messing it up , idk why chaing def_sched affects test 4 tho
 
 fs->next = flight_schedules_active;
 
 
 if(flight_schedules_active != NULL){
   flight_schedules_active->prev = fs;
-  
 }
 flight_schedules_active= fs;
 
@@ -449,9 +448,6 @@ return (flight_schedules_free == NULL ? NULL : flight_schedules_active);
 //flight schedule free
 //takes schedule off active list, resets it, then places the node back on free list
 void flight_schedule_free(struct flight_schedule *fs){
-
-
-
   if (fs->next != NULL && fs == flight_schedules_active) { // firtst node with others
     flight_schedules_active = fs->next;
     flight_schedules_active->prev = NULL;
@@ -477,65 +473,17 @@ void flight_schedule_free(struct flight_schedule *fs){
     flight_schedules_free = fs;
     fs->prev = NULL;
   }
-
-
-/*
-  flight_schedules_active = flight_schedules_active->next;
-  flight_schedule_reset(fs);
-  fs->next = flight_schedules_free;
-  flight_schedules_free = fs;
-  fs->next->prev = fs;
-*/
-
-  /*int counter = 0;
-  struct flight_schedule *temp = flight_schedules_active;
-  while(temp != NULL) {
-    if(temp == fs){ //use flight schedule find instead
-      break;
-    }
-    temp = temp->next;
-    counter++;
-  }
-  if (counter == 0){
-    flight_schedules_active = temp->next;
-    flight_schedules_active->prev = NULL;
-    temp->next = NULL;
-
-    flight_schedule_reset(temp);
-
-    temp->next = flight_schedules_free; //this block of code adds temp to front of free
-    flight_schedules_free = temp;
-    flight_schedules_free->next->prev = flight_schedules_free;
-    //flight_schedule_reset(temp);
-
-  }
-  else{ 
-    temp->prev->next = temp->next;   //actualy this is the else case end case not required
-    temp->next->prev = temp->prev;
-    temp->next = NULL;
-    temp->prev = NULL;
-
-    flight_schedule_reset(temp);
-
-    temp->next = flight_schedules_free;
-    flight_schedules_free = temp;
-    flight_schedules_free->next->prev = flight_schedules_free;
-  }
-}
-*/
 }
 
 struct flight_schedule *flight_schedule_find(city_t city){ //or char *city//it says city_t city cant use strcmp then ja
   struct flight_schedule *temp = flight_schedules_active;
   int found = 0;
-
-//  if (temp == NULL) {
- //   msg_city_bad(city);
- // }
-
+  //if(temp == NULL){
+  //  printf("YOYOYO");
+  //}
   while(temp != NULL){
     if (strcmp(city,temp->destination) == 0){ //may have to use casts?
-      found =1;
+      found = 1;
       //continue;
       return(temp);
     }
@@ -546,13 +494,17 @@ struct flight_schedule *flight_schedule_find(city_t city){ //or char *city//it s
   }
  //this might return null 
  //return(temp);
+ //return; //this might be wrong 
 }
 
 
 void flight_schedule_add(city_t city){ //should this call get city
-
+  
   //first cheeck to see if city exists
-  if (flight_schedules_free == NULL){
+  //if(flight_schedules_active == MAX_DEFAULT_SCHEDULES+1){ //not this error coulod be in free
+   // msg_schedule_no_free();
+ // }
+  if (flight_schedules_free == NULL){ //maybe something is wrong in free 
     msg_schedule_no_free();
   }
 
@@ -609,17 +561,6 @@ void flight_schedule_list(city_t city){
   printf("\n");
 
 
-
-
-  /*struct flight_schedule *temp = flight_schedules_active; 
-  msg_city_flights(city);
-  while(temp != NULL){
-    if (strcmp(city,temp->destination) == 0){
-      printf("%s\n", temp->destination); //displaying memory address
-    }
-    temp = temp->next;
-  }
-  */
 }
 
 void flight_schedule_add_flight(city_t city){
@@ -632,71 +573,29 @@ void flight_schedule_add_flight(city_t city){
 
   if (temp == NULL){
     msg_city_bad(city);
-   // return; // check return 
   }
 
   while(temp->flights[i].time != -1){ //seg fault here
-    
-    //if (i == MAX_FLIGHTS_PER_CITY){
-    //  full = 1;
-    //  break;
-    //}
     i++;
-      if (i == MAX_FLIGHTS_PER_CITY){  //seg fault is becasue it willl try to index into flights i that is outside range
+    if (i == MAX_FLIGHTS_PER_CITY){  //seg fault is becasue it willl try to index into flights i that is outside range
       full = 1;
       break;
     }
-
   }
-
   if(full){
     msg_city_max_flights_reached(city);
   }
   else{
-
     int t = (flights[i].time); //this might cause fault /./ it said here t =-1
     
     time_get(&t);
-    //printf("ADD FLIGHT time %d", t); 
+
     temp->flights[i].time = t;
     int c = (temp->flights[i].capacity); // look for value of c 
-    
     flight_capacity_get(&c);
-    //printf("ADD_FLIGHT cap %d", c);
     temp->flights[i].available = c; 
     temp->flights[i].capacity = c;
   }
-  /*
-  int *t;
-  time_get(t); //do this then check if t is 0 to see if valid or not 
-  
-  if(time_get(t) == 0) { //or just t
-    msg_flight_bad_time();      
-    return; //maybe use go to end
-   }
-
-  int c = 15;
-  flight_capacity_get(&c);  //this also has to be done as above to get appropraite io
-  
-  if (flight_capacity_get(&c) == 0){ //show message plane is full
-      //msg_flight_no_seats();
-      return;
-  }
-
-  //struct flight *flights;
-  //flights = temp->flights;
-  //flights[i]
-  //loop thru flights until open flight then add flight
-
-  for(int i = 0; i < MAX_FLIGHTS_PER_CITY; i++){
-    if(flights[i].time == -1){
-      flights[i].time = *t;//was flights[i] will this change correct one?
-      flights[i].capacity = c;
-      break;
-    }
-  }
-  //else return that it failed
-  */
 }
 
 
@@ -734,25 +633,20 @@ void flight_schedule_remove_flight(city_t city){
 
 void flight_schedule_schedule_seat(city_t city) {
   struct flight_schedule *temp = flight_schedule_find(city);
-
-
-  
-
   if(temp == NULL) {
-    printf("null");
     msg_city_bad(city);
    }
   struct flight *fl;
   fl = temp->flights;
   time_t t;
   //time_get(&t); // was int *t if time gets return false end program then print message about error
-  if (time_get(&t) ==0){
+  if (time_get(&t) == 0){
     return;
   }
    else {
     //int nearest = 0; 
     //int position = 0;
-    int i =0;
+    int i = 0;
     //printf("here");
     flight_schedule_sort_flights_by_time(temp);
     //printf("sorted");
@@ -766,55 +660,41 @@ void flight_schedule_schedule_seat(city_t city) {
       if (fl[i].time >= t && fl[i].available != 0){ //this and under where else if
         fl[i].available--;
         //printf("ava");
-        break;
+        return;
       }
       //flight_schedule_list(city);
       if (fl[i].time >= t && fl[i].available == 0){
         msg_flight_no_seats();
-        break;
+        return;
       }
+      //if ()
       //i++;
+      
     }
+    msg_flight_no_seats();
    }
-
-/*
-  for(int i = 0; i < MAX_FLIGHTS_PER_CITY; i++){
-    if(flights[i].time >= *t){
-      if(flights[i].time - nearest <= nearest - *t) {  //had time instead of t
-        nearest = flights[i].time;
-        position = i;
-      }
-    }
-  }
-flights[position].available--;
-  */
 }
 
  void flight_schedule_unschedule_seat(city_t city){
   struct flight_schedule *temp = flight_schedule_find(city);
 
-  struct flight *flights;
-  flights = temp->flights;
+
   time_t t;
-  if (time_get(&t) ==0){
+  if (time_get(&t) == 0){
     return;
   }
-
-  int nearest = 0;
-  int position = 0;
+  struct flight *flights;
+  flights = temp->flights;
 
   for(int i = 0; i < MAX_FLIGHTS_PER_CITY; i++){
     if(flights[i].time == t && (flights[i].available < flights[i].capacity)){ //origrinally was time 
      flights[i].available++;
-     break;
+     return;
     }
     if(flights[i].time == t && (flights[i].available == flights[i].capacity)){
       msg_flight_all_seats_empty();
-      break;
+      return;
     }
-
   }
-  //msg_flight_bad_time();
+  msg_flight_bad_time();
 }
-
-
