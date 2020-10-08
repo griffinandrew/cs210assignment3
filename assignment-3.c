@@ -153,7 +153,7 @@ int main(int argc, char *argv[])
       //                                        360\n"
       city_read(city);
       flight_schedule_remove_flight(city);
-	break;
+	    break;
     case 's':
       // schedule a seat on a flight for a particular city "s Toronto\n
       //                                                    300\n"
@@ -396,7 +396,7 @@ flight_schedules_free = fs->next;
 if(flight_schedules_free != NULL){
   flight_schedules_free->prev = NULL; //seg fault here for adding plus 1 max prev must already be null and this assignment is messing it up , idk why chaing def_sched affects test 4 tho
 }
-//flight_schedules_free->prev = NULL; //seg fault here for adding plus 1 max prev must already be null and this assignment is messing it up , idk why chaing def_sched affects test 4 tho
+
 
 fs->next = flight_schedules_active;
 
@@ -408,44 +408,6 @@ flight_schedules_active= fs;
 
 return (fs);
 }
-/*
-  struct flight_schedule *temp =  flight_schedules_free;
-
-  if (flight_schedules_free != NULL){
-    flight_schedules_free = temp->next; //make sure 
-    if(temp->next != NULL) {
-      flight_schedules_free->prev = NULL;
-    }
-    
-  }
-
-
-  temp->next = flight_schedules_active;
-  //if active not null set active prev to temp
-  if(flight_schedules_active != NULL){
-    flight_schedules_active->prev = temp;
-  }
-  flight_schedules_active = temp;
-
-  /*
-  flight_schedules_free-> prev->next = flight_schedules_active;
-  
-  //temp->next = flight_schedules_active;
-  flight_schedules_active = flight_schedules_free->prev;
-  flight_schedules_free->prev = NULL;
-  
-  //temp->prev = NULL;
-  //struct flight_schedule *temp2 = flight_schedules_active
-
-  if(flight_schedules_active -> next != NULL){
-    flight_schedules_active->next->prev = flight_schedules_active;
-  }
-
-  //flight_schedules_active = temp;
-  temp = flight_schedules_active;
-  */
-  //return(temp); //return temp temp could be null resulting in error
-//}
 
 //flight schedule free
 //takes schedule off active list, resets it, then places the node back on free list
@@ -532,6 +494,7 @@ void flight_schedule_remove(city_t city){
   //struct flight_schedule *temp = flight_schedule_find(city);
   if(flight_schedule_find(city) == NULL){
    msg_city_bad(city);
+   return;
   }
   else{
     //printf("removed");
@@ -578,10 +541,18 @@ void flight_schedule_add_flight(city_t city){
   int full = 0;
   int i =0;
 
+  time_t t;
+  if(time_get(&t) == 0){
+    return;
+  }
+  int c;
+  if (flight_capacity_get(&c) == 0){
+    return;
+  }
   if (temp == NULL){
     msg_city_bad(city);
+    return;
   }
-
   while(temp->flights[i].time != -1){ //seg fault here
     i++;
     if (i == MAX_FLIGHTS_PER_CITY){  //seg fault is becasue it willl try to index into flights i that is outside range
@@ -591,15 +562,17 @@ void flight_schedule_add_flight(city_t city){
   }
   if(full){
     msg_city_max_flights_reached(city);
+
+    return;
   }
   else{
-    int t = (flights[i].time); //this might cause fault /./ it said here t =-1
+    //time_t t;// = (flights[i].time); //this might cause fault /./ it said here t =-1
     
-    time_get(&t);
+    //time_get(&t);
 
     temp->flights[i].time = t;
-    int c = (temp->flights[i].capacity); // look for value of c 
-    flight_capacity_get(&c);
+    //int c; //= (temp->flights[i].capacity); // look for value of c 
+    //flight_capacity_get(&c);
     temp->flights[i].available = c; 
     temp->flights[i].capacity = c;
   }
@@ -611,13 +584,16 @@ void flight_schedule_remove_flight(city_t city){
   struct flight_schedule *temp = flight_schedule_find(city);
  //idk if this is the right time to call or even need too
 
-  time_t t;
-  time_get(&t); //if 1 continue; else tell user
+
   int found = 0;
   if (temp == NULL){
     msg_city_bad(city);
+    return;
   }
+  //if 1 continue; else tell user
   else{
+  time_t t;
+  time_get(&t);
   struct flight *fl;
   fl = temp->flights;
 
