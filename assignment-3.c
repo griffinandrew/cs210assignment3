@@ -389,24 +389,17 @@ int flight_compare_time(const void *a, const void *b)
 //takes a schedule off the free list and places it on the active list
 //returns pointer to updated flight schedule
 struct flight_schedule * flight_schedule_allocate(void){
-
-struct flight_schedule *fs = flight_schedules_free;
-
-flight_schedules_free = fs->next;
-if(flight_schedules_free != NULL){
-  flight_schedules_free->prev = NULL; //seg fault here for adding plus 1 max prev must already be null and this assignment is messing it up , idk why chaing def_sched affects test 4 tho
-}
-
-
-fs->next = flight_schedules_active;
-
-
-if(flight_schedules_active != NULL){
-  flight_schedules_active->prev = fs;
-}
-flight_schedules_active= fs;
-
-return (fs);
+  struct flight_schedule *fs = flight_schedules_free;
+  flight_schedules_free = fs->next;
+  if(flight_schedules_free != NULL){
+    flight_schedules_free->prev = NULL; //seg fault here for adding plus 1 max prev must already be null and this assignment is messing it up , idk why chaing def_sched affects test 4 tho
+  }
+  fs->next = flight_schedules_active;
+  if(flight_schedules_active != NULL){
+    flight_schedules_active->prev = fs;
+  }
+  flight_schedules_active= fs;
+  return (fs);
 }
 
 //flight schedule free
@@ -439,16 +432,12 @@ void flight_schedule_free(struct flight_schedule *fs){
   }
 }
 
-struct flight_schedule *flight_schedule_find(city_t city){ //or char *city//it says city_t city cant use strcmp then ja
+struct flight_schedule *flight_schedule_find(city_t city){
   struct flight_schedule *temp = flight_schedules_active;
   int found = 0;
-  //if(temp == NULL){
-  //  printf("YOYOYO");
-  //}
   while(temp != NULL){
-    if (strcmp(city,temp->destination) == 0){ //may have to use casts?
+    if (strcmp(city,temp->destination) == 0){
       found = 1;
-      //continue;
       return(temp);
     }
     else {
@@ -456,63 +445,47 @@ struct flight_schedule *flight_schedule_find(city_t city){ //or char *city//it s
     }
     temp = temp->next;
   }
- //this might return null 
- //return(temp);
- //return; //this might be wrong 
 }
 
 //takes an input city and adds a flight schedule for given city
-void flight_schedule_add(city_t city){ //should this call get city
-  
+void flight_schedule_add(city_t city){
   //first cheeck to see if city exists
-  //if(flight_schedules_active == MAX_DEFAULT_SCHEDULES+1){ //not this error coulod be in free
-   // msg_schedule_no_free();
- // }
-  //do i have to loop thru and heck 
-  if (flight_schedules_free == NULL){ //maybe something is wrong in free 
+  if (flight_schedules_free == NULL){
     msg_schedule_no_free();
     return;
   }
-
   struct flight_schedule *fs = flight_schedule_find(city);
   if (fs != NULL)  {
     msg_city_exists(city);
     return;
   }
-
   if (fs == NULL){
     struct flight_schedule *p = flight_schedule_allocate(); // returns pointer and assigns to p
     strncpy(p->destination, city, MAX_CITY_NAME_LEN);
-  
-  //p->destination = ch; 
-
   }
 }
 
 //takes as input a city and removes the flight schedule for that city if it exists
 void flight_schedule_remove(city_t city){
-  //struct flight_schedule *temp = flight_schedule_find(city);
   if(flight_schedule_find(city) == NULL){
-   msg_city_bad(city);
-   return;
+    msg_city_bad(city);
+    return;
   }
   else{
-    //printf("removed");
     flight_schedule_free(flight_schedule_find(city));
   }
-  //printf("removed");
 }
 
 
 //lists all existing flight schedules 
 void flight_schedule_listAll(void){
-  struct flight_schedule *temp = flight_schedules_active; //need to add messages
+  struct flight_schedule *temp = flight_schedules_active; 
   while(temp != NULL){
-    printf("%s\n", temp->destination); // print temp is disaplying memory address
+    printf("%s\n", temp->destination);
     temp = temp->next;
   }
-
 }
+
 //lists all of the flights for a given city
 void flight_schedule_list(city_t city){
   if(flight_schedule_find(city) == NULL){
@@ -527,22 +500,23 @@ void flight_schedule_list(city_t city){
     }
   }
   printf("\n");
-
-
 }
 
-//takes as input city and adds a given flight to that city uses get time and 
-//i dont call time get or flight cap get is that a prob?
+
+//takes as input city and adds a given flight to that city uses get time and get capacity
+//first the function finds the city and assigns it to temp, temp is then used to set flights to the citys flight schedule 
+//next is gets the time and capcity and assures they are valid values 
+//checks to make sure a city was found
+//uses while loop to check for next node to add new flight too
+//if found loop is broken and attributes are set accordingly otherwise the arrray is full and displays that
 void flight_schedule_add_flight(city_t city){
-  //flight_schedule_add(city);
   struct flight_schedule *temp = flight_schedule_find(city);
   struct flight *flights;
   flights = temp->flights;
   int full = 0;
-  int i =0;
-
+  int i = 0;
   time_t t;
-  if(time_get(&t) == 0){
+  if(time_get(&t) == 0){ //had to cahnge time_get and capcity get to the front and check for good vals, so doesn't result in bad command
     return;
   }
   int c;
@@ -553,38 +527,31 @@ void flight_schedule_add_flight(city_t city){
     msg_city_bad(city);
     return;
   }
-  while(temp->flights[i].time != -1){ //seg fault here
+  while(temp->flights[i].time != -1){
     i++;
-    if (i == MAX_FLIGHTS_PER_CITY){  //seg fault is becasue it willl try to index into flights i that is outside range
+    if (i == MAX_FLIGHTS_PER_CITY){ 
       full = 1;
       break;
     }
   }
   if(full){
     msg_city_max_flights_reached(city);
-
     return;
   }
   else{
-    //time_t t;// = (flights[i].time); //this might cause fault /./ it said here t =-1
-    
-    //time_get(&t);
-
     temp->flights[i].time = t;
-    //int c; //= (temp->flights[i].capacity); // look for value of c 
-    //flight_capacity_get(&c);
     temp->flights[i].available = c; 
     temp->flights[i].capacity = c;
   }
 }
 
-
-//takes as input a city and removes given fliht for that city, 
+//takes as input a city and removes given fliht for that city
+//first the function finds the city and assigns it to temp, then makes sure city is valid 
+//next we read in the time for the flight 
+//temp is then used to set fl to the citys flight schedule
+//if that time is found sets attributes to remove, otherwise time was bad and that is displayed
 void flight_schedule_remove_flight(city_t city){
   struct flight_schedule *temp = flight_schedule_find(city);
- //idk if this is the right time to call or even need too
-
-
   int found = 0;
   if (temp == NULL){
     msg_city_bad(city);
@@ -592,82 +559,71 @@ void flight_schedule_remove_flight(city_t city){
   }
   //if 1 continue; else tell user
   else{
-  time_t t;
-  time_get(&t);
-  struct flight *fl;
-  fl = temp->flights;
-
-  for(int i = 0; i < MAX_FLIGHTS_PER_CITY; i++){
-    if(fl[i].time == t){
-      fl[i].time = -1;//was flights[i] will this change correct one? or TIME_NULL
-      fl[i].capacity = 0;  
-      fl[i].available = 0;
-      found = 1;
-      break;
+    time_t t;
+    time_get(&t);
+    struct flight *fl;
+    fl = temp->flights;
+    for(int i = 0; i < MAX_FLIGHTS_PER_CITY; i++){
+      if(fl[i].time == t){
+        fl[i].time = -1;
+        fl[i].capacity = 0;  
+        fl[i].available = 0;
+        found = 1;
+        break;
+      }
+    }
+    if (found == 0){
+      msg_flight_bad_time();
     }
   }
-  if (found == 0){
-    msg_flight_bad_time();
-  }
-  }
-
 }
 
 //takes as input city and schedules seat on a flight for tahat city
 //the user can specify a time and your program should schedule the next avaiable flight from given time
+//first the function finds the city and assigns it to temp, then makes sure city is valid 
+//temp is then used to set fl to the citys flight schedule
+//next we read in the time for the flight and check its valid
+//then the flights are sorted, next i loop through checking for the next avaible flight and make sure it has seats 
+//if it does seat is scheduled otherwise no seats avaiable 
 void flight_schedule_schedule_seat(city_t city) {
   struct flight_schedule *temp = flight_schedule_find(city);
   if(temp == NULL) {
-    msg_city_bad(city);
-   }
+    msg_city_bad(city); // if city doesn't exist display bad city msg
+  }
   struct flight *fl;
   fl = temp->flights;
   time_t t;
-  //time_get(&t); // was int *t if time gets return false end program then print message about error
-  if (time_get(&t) == 0){
+  if (time_get(&t) == 0){ //make sure time is valid first to avoid bad command  error
     return;
   }
    else {
-    //int nearest = 0; 
-    //int position = 0;
     int i = 0;
-    //printf("here");
     flight_schedule_sort_flights_by_time(temp);
-    //printf("sorted");
     for(int i = 0; i < MAX_FLIGHTS_PER_CITY; i++){//while(fl[i].time != -1 && i != MAX_FLIGHTS_PER_CITY-1 ){ //this statement something must be wrong not entering loop
-      //flight_schedule_list(city);
-      //if(fl[i].time < t && fl[i+1].time == -1){
-      //  msg_flight_bad_time();
-      //  break;
-      //}
-      //flight_schedule_list(city);
       if (fl[i].time >= t && fl[i].available != 0){ //this and under where else if
         fl[i].available--;
-        //printf("ava");
         return;
       }
-      //flight_schedule_list(city);
       if (fl[i].time >= t && fl[i].available == 0){
         msg_flight_no_seats();
         return;
       }
-      //if ()
-      //i++;
-      
     }
     msg_flight_no_seats();
-   }
+  }
 }
 
 
 //Takes as input a city and unschedules a seat on a given flight for this city.
 //The user must specify the exact time for the flight that they are unscheduling.
+//first the function finds the city and assigns it to temp, then makes sure city is valid 
+//next we read in the time for the flight and check its valid
+//temp is then used to set flights to the citys flight schedule
+//loop through checking to see if exact time found and if there are availabale seats to unschedule, update or display message accordingly
 
  void flight_schedule_unschedule_seat(city_t city){
   struct flight_schedule *temp = flight_schedule_find(city);
-
-
-  time_t t;
+  time_t t; //needed to check time at begining to fix bad command bug 
   if (time_get(&t) == 0){
     return;
   }
