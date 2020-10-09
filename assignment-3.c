@@ -384,47 +384,57 @@ int flight_compare_time(const void *a, const void *b)
   return (af->time - bf->time);
 }
 
-//WRITE SOME CODE!
 //flight schedule allocate
 //takes a schedule off the free list and places it on the active list
 //returns pointer to updated flight schedule
+//first fs points to the free list and takes off a node, if that wasn't the last one on free set the new first node's prev to be null
+//add the new node onto the active list
+//if there is another node on active add new node to front of list
+//the new active schedule leads with fs and returns that value
 struct flight_schedule * flight_schedule_allocate(void){
   struct flight_schedule *fs = flight_schedules_free;
-  flight_schedules_free = fs->next;
-  if(flight_schedules_free != NULL){
-    flight_schedules_free->prev = NULL; //seg fault here for adding plus 1 max prev must already be null and this assignment is messing it up , idk why chaing def_sched affects test 4 tho
+  flight_schedules_free = fs->next; //first fs points to the free list and takes off a node
+  if(flight_schedules_free != NULL){ //if that wasn't the last one on free set the new first node's prev to be null
+    flight_schedules_free->prev = NULL; 
   }
   fs->next = flight_schedules_active;
-  if(flight_schedules_active != NULL){
+  if(flight_schedules_active != NULL){ //if there is another node on active add new node to front of list
     flight_schedules_active->prev = fs;
   }
-  flight_schedules_active= fs;
+  flight_schedules_active = fs; //the new active schedule leads with fs and returns that value
   return (fs);
 }
 
 //flight schedule free
 //takes schedule off active list, resets it, then places the node back on free list
+//if the parameter is the first node accompanied with others take first node off and then set active to the next null and its prev to null
+//if there is only one node on active, take node off set it to null
+//if it is the last node take off end by setting the prev node to null
+//otherwise if in middle set surrounding nodes to eachother
+//reset the given schedule
+//if no schedules on free add given to free
+//otherwise add node to front of free
 void flight_schedule_free(struct flight_schedule *fs){
-  if (fs->next != NULL && fs == flight_schedules_active) { // firtst node with others
+  if (fs->next != NULL && fs == flight_schedules_active) { //if the parameter is the first node accompanied with others take first node off and then set active to the next null and its prev to null
     flight_schedules_active = fs->next;
     flight_schedules_active->prev = NULL;
   }
-  else if (fs == flight_schedules_active){   //only one node
+  else if (fs == flight_schedules_active){   //if there is only one node on active, take node off set it to null
     flight_schedules_active = NULL;
   }
-  else if (fs->next == NULL){ // last
+  else if (fs->next == NULL){ //if it is the last node take off end by setting the prev node to null
     fs->prev->next = NULL;
   }
-  else{
+  else{ //otherwise if in middle set surrounding nodes to eachother
     fs->prev->next = fs->next;
     fs->next->prev = fs->prev;
   }
-  flight_schedule_reset(fs);
+  flight_schedule_reset(fs); //reset schedule
 
-  if (flight_schedules_free == NULL){
+  if (flight_schedules_free == NULL){ //if no schedules on free add given to free
     flight_schedules_free = fs;
   }
-  else{
+  else{//otherwise add node to front of free
     flight_schedules_free->prev = fs;
     fs->next = flight_schedules_free;
     flight_schedules_free = fs;
@@ -432,52 +442,60 @@ void flight_schedule_free(struct flight_schedule *fs){
   }
 }
 
+//Takes as input a city and traverses the active flight list until it finds the flight schedule for this
+//city, if it exists
+//Returns the flight schedule of said city
+//first the function finds the city and assigns it to temp
+//traverse active list using temp, check using string compare to see if city is on active list
+//if it is found return it 
 struct flight_schedule *flight_schedule_find(city_t city){
-  struct flight_schedule *temp = flight_schedules_active;
-  int found = 0;
-  while(temp != NULL){
-    if (strcmp(city,temp->destination) == 0){
-      found = 1;
+  struct flight_schedule *temp = flight_schedules_active; //the function finds the city and assigns it to temp
+  while(temp != NULL){ //traverse active list using temp
+    if (strcmp(city,temp->destination) == 0){ //check using string compare to see if city is on active list 
       return(temp);
-    }
-    else {
-      found = 0;
     }
     temp = temp->next;
   }
 }
 
 //takes an input city and adds a flight schedule for given city
+//first makes sure there is room to add new city, if not msg and return
+//find the city and set it equal to fs 
+//if the city is already on the list, this is told to user 
+//otherwise allocate is called to make room to add city then using string copy to copy given city to new node
 void flight_schedule_add(city_t city){
   //first cheeck to see if city exists
-  if (flight_schedules_free == NULL){
+  if (flight_schedules_free == NULL){ //makes sure there is room to add new city, if not msg and return
     msg_schedule_no_free();
     return;
   }
-  struct flight_schedule *fs = flight_schedule_find(city);
-  if (fs != NULL)  {
+  struct flight_schedule *fs = flight_schedule_find(city); //find the city and set it equal to fs 
+  if (fs != NULL)  { //if on list msg is output
     msg_city_exists(city);
     return;
   }
-  if (fs == NULL){
-    struct flight_schedule *p = flight_schedule_allocate(); // returns pointer and assigns to p
-    strncpy(p->destination, city, MAX_CITY_NAME_LEN);
+  if (fs == NULL){ //flight not yet added
+    struct flight_schedule *p = flight_schedule_allocate();  //allocate is called to make room to add city
+    strncpy(p->destination, city, MAX_CITY_NAME_LEN); //using string copy to copy given city to new node
   }
 }
 
 //takes as input a city and removes the flight schedule for that city if it exists
+//checks to make sure city exists if it doesn't tells user
+//otherwise find schedule for city using find then use free to clear it 
 void flight_schedule_remove(city_t city){
-  if(flight_schedule_find(city) == NULL){
+  if(flight_schedule_find(city) == NULL){ //checks to make sure city exists if it doesn't tells user
     msg_city_bad(city);
     return;
   }
   else{
-    flight_schedule_free(flight_schedule_find(city));
+    flight_schedule_free(flight_schedule_find(city)); //otherwise find schedule for city using find then use free to clear it
   }
 }
 
 
-//lists all existing flight schedules 
+//lists all existing active flight schedules
+//uses temp to traverse active printing all flights
 void flight_schedule_listAll(void){
   struct flight_schedule *temp = flight_schedules_active; 
   while(temp != NULL){
@@ -486,15 +504,17 @@ void flight_schedule_listAll(void){
   }
 }
 
-//lists all of the flights for a given city
+//lists all of the flights for a given city with there flight info
+//checks to make sure city exists if it doesn't tells user
+//fs points to the given city msg about city then traverses displaying flight info for each flight
 void flight_schedule_list(city_t city){
-  if(flight_schedule_find(city) == NULL){
+  if(flight_schedule_find(city) == NULL){ //checks to make sure city exists if it doesn't tells user
     msg_city_bad(city);
     return;
   }
   struct flight_schedule *fs = flight_schedule_find(city);
-  msg_city_flights(city);
-  for(int j =0; j < MAX_FLIGHTS_PER_CITY; j++){
+  msg_city_flights(city); //find the city and msg that 
+  for(int j =0; j < MAX_FLIGHTS_PER_CITY; j++){ //loop through schedule displaying attributes 
     if(fs->flights[j].time != -1){
       msg_flight_info(fs->flights[j].time, fs->flights[j].available, fs->flights[j].capacity);
     }
@@ -510,35 +530,35 @@ void flight_schedule_list(city_t city){
 //uses while loop to check for next node to add new flight too
 //if found loop is broken and attributes are set accordingly otherwise the arrray is full and displays that
 void flight_schedule_add_flight(city_t city){
-  struct flight_schedule *temp = flight_schedule_find(city);
+  struct flight_schedule *temp = flight_schedule_find(city); //first the function finds the city and assigns it to temp 
   struct flight *flights;
-  flights = temp->flights;
+  flights = temp->flights; // temp is then used to set flights to the citys flight schedule
   int full = 0;
   int i = 0;
   time_t t;
-  if(time_get(&t) == 0){ //had to cahnge time_get and capcity get to the front and check for good vals, so doesn't result in bad command
+  if(time_get(&t) == 0){ //had to change time_get and capcity get to the front and check for good vals, so doesn't result in bad command
     return;
   }
   int c;
-  if (flight_capacity_get(&c) == 0){
+  if (flight_capacity_get(&c) == 0){ //gets the time and capcity and assures they are valid values 
     return;
   }
-  if (temp == NULL){
+  if (temp == NULL){ //checks to make sure a city was found
     msg_city_bad(city);
     return;
   }
-  while(temp->flights[i].time != -1){
+  while(temp->flights[i].time != -1){ //uses while loop to check for next node to add new flight too
     i++;
     if (i == MAX_FLIGHTS_PER_CITY){ 
       full = 1;
       break;
     }
   }
-  if(full){
+  if(full){ //if full loop is broken the arrray is full and displays that
     msg_city_max_flights_reached(city);
     return;
   }
-  else{
+  else{ //otherwise if found set attributes accordingly
     temp->flights[i].time = t;
     temp->flights[i].available = c; 
     temp->flights[i].capacity = c;
@@ -548,23 +568,22 @@ void flight_schedule_add_flight(city_t city){
 //takes as input a city and removes given fliht for that city
 //first the function finds the city and assigns it to temp, then makes sure city is valid 
 //next we read in the time for the flight 
-//temp is then used to set fl to the citys flight schedule
-//if that time is found sets attributes to remove, otherwise time was bad and that is displayed
+//temp is then used to set fl to the citys flight schedule, then this is used to traverse flights
+//uses if that time is found sets attributes to remove, otherwise time was bad and that is displayed
 void flight_schedule_remove_flight(city_t city){
   struct flight_schedule *temp = flight_schedule_find(city);
   int found = 0;
-  if (temp == NULL){
+  if (temp == NULL){ //function finds the city and assigns it to temp, then makes sure city is valid , displaying messae if bad
     msg_city_bad(city);
     return;
   }
-  //if 1 continue; else tell user
   else{
     time_t t;
-    time_get(&t);
+    time_get(&t); // we read in the time for the flight 
     struct flight *fl;
-    fl = temp->flights;
-    for(int i = 0; i < MAX_FLIGHTS_PER_CITY; i++){
-      if(fl[i].time == t){
+    fl = temp->flights; 
+    for(int i = 0; i < MAX_FLIGHTS_PER_CITY; i++){ //temp is then used to set fl to the citys flight schedule, then this is used to travere flights
+      if(fl[i].time == t){ //if that time is found sets attributes to remove, otherwise time was bad and that is displayed
         fl[i].time = -1;
         fl[i].capacity = 0;  
         fl[i].available = 0;
@@ -572,7 +591,7 @@ void flight_schedule_remove_flight(city_t city){
         break;
       }
     }
-    if (found == 0){
+    if (found == 0){ //otherwise bad time displayed
       msg_flight_bad_time();
     }
   }
@@ -598,25 +617,25 @@ void flight_schedule_schedule_seat(city_t city) {
   }
    else {
     int i = 0;
-    flight_schedule_sort_flights_by_time(temp);
-    for(int i = 0; i < MAX_FLIGHTS_PER_CITY; i++){//while(fl[i].time != -1 && i != MAX_FLIGHTS_PER_CITY-1 ){ //this statement something must be wrong not entering loop
-      if (fl[i].time >= t && fl[i].available != 0){ //this and under where else if
+    flight_schedule_sort_flights_by_time(temp); //sort schedules by time
+    for(int i = 0; i < MAX_FLIGHTS_PER_CITY; i++){ //loop through checking for the next avaible flight and make sure it has seats 
+      if (fl[i].time >= t && fl[i].available != 0){  //if found with seats schedules seat
         fl[i].available--;
         return;
       }
-      if (fl[i].time >= t && fl[i].available == 0){
+      if (fl[i].time >= t && fl[i].available == 0){ //if found but no seats, msg no seats
         msg_flight_no_seats();
         return;
       }
     }
-    msg_flight_no_seats();
+    msg_flight_no_seats(); //if not found no seats
   }
 }
 
 
 //Takes as input a city and unschedules a seat on a given flight for this city.
 //The user must specify the exact time for the flight that they are unscheduling.
-//first the function finds the city and assigns it to temp, then makes sure city is valid 
+//first the function finds the city and assigns it to temp
 //next we read in the time for the flight and check its valid
 //temp is then used to set flights to the citys flight schedule
 //loop through checking to see if exact time found and if there are availabale seats to unschedule, update or display message accordingly
@@ -624,21 +643,21 @@ void flight_schedule_schedule_seat(city_t city) {
  void flight_schedule_unschedule_seat(city_t city){
   struct flight_schedule *temp = flight_schedule_find(city);
   time_t t; //needed to check time at begining to fix bad command bug 
-  if (time_get(&t) == 0){
+  if (time_get(&t) == 0){ //check to make sure valid
     return;
   }
   struct flight *flights;
-  flights = temp->flights;
+  flights = temp->flights; //temp is then used to set flights to the citys flight schedule
 
-  for(int i = 0; i < MAX_FLIGHTS_PER_CITY; i++){
-    if(flights[i].time == t && (flights[i].available < flights[i].capacity)){ //origrinally was time 
+  for(int i = 0; i < MAX_FLIGHTS_PER_CITY; i++){//loop through checking to see if exact time found
+    if(flights[i].time == t && (flights[i].available < flights[i].capacity)){ //if there are availabale seats to unschedule, update 
      flights[i].available++;
      return;
     }
-    if(flights[i].time == t && (flights[i].available == flights[i].capacity)){
+    if(flights[i].time == t && (flights[i].available == flights[i].capacity)){ //if no seats display message accordingly
       msg_flight_all_seats_empty();
       return;
     }
   }
-  msg_flight_bad_time();
+  msg_flight_bad_time(); //given time didnt match time in schedule
 }
